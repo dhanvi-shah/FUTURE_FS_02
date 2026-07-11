@@ -41,7 +41,7 @@ api.interceptors.response.use(
 export const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-      return 'Cannot reach the server. Make sure the backend is running on port 5001.';
+      return `Cannot reach the server at ${API_URL}. Check that the backend is running and CORS is configured.`;
     }
     return error.response?.data?.message || error.message;
   }
