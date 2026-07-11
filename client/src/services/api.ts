@@ -1,12 +1,19 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const normalizeApiUrl = (value: string) => {
+  const trimmed = value.replace(/\/$/, '');
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+};
+
+const API_URL = normalizeApiUrl(
+  import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
+);
 
 export const api = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  timeout: import.meta.env.PROD ? 60000 : 15000,
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {

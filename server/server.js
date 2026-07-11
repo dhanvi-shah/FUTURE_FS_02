@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './config/db.js';
-import { env, corsOrigins, validateProductionEnv } from './config/env.js';
+import { validateProductionEnv } from './config/env.js';
+import { isOriginAllowed } from './config/cors.js';
 import authRouter from './routers/authRouter.js';
 import leadRouter from './routers/leadRouter.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -13,22 +14,13 @@ const app = express();
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) {
+      if (!origin || isOriginAllowed(origin)) {
         callback(null, true);
         return;
       }
 
-      if (corsOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      if (env.isDev && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error(`CORS blocked for origin: ${origin}`));
+      console.warn(`CORS blocked for origin: ${origin}`);
+      callback(null, false);
     },
     credentials: true,
   })

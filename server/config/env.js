@@ -5,6 +5,9 @@ dotenv.config();
 const isDev = process.env.NODE_ENV !== 'production';
 const DEFAULT_JWT_SECRET = 'dev_secret_change_me';
 
+const isLocalhostUrl = (url) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/?$/.test(url.trim());
+
 export const env = {
   port: Number(process.env.PORT) || 5001,
   mongoUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/minicrm',
@@ -14,12 +17,6 @@ export const env = {
   isDev,
   useMemoryDb: process.env.USE_MEMORY_DB === 'true',
 };
-
-export const corsOrigins = [
-  ...env.clientUrl.split(',').map((url) => url.trim()).filter(Boolean),
-  'http://localhost:3001',
-  'http://127.0.0.1:3001',
-];
 
 export const validateProductionEnv = () => {
   if (isDev) {
@@ -38,6 +35,8 @@ export const validateProductionEnv = () => {
 
   if (!process.env.CLIENT_URL) {
     missing.push('CLIENT_URL');
+  } else if (isLocalhostUrl(process.env.CLIENT_URL)) {
+    missing.push('CLIENT_URL (must be your deployed frontend URL, not localhost)');
   }
 
   if (missing.length > 0) {
