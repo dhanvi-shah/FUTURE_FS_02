@@ -30,7 +30,7 @@ export const isOriginAllowed = (origin) => {
     return true;
   }
 
-  if (!env.isDev && isVercelOrigin(normalized)) {
+  if (isVercelOrigin(normalized)) {
     return true;
   }
 
