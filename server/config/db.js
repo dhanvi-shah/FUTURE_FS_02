@@ -1,20 +1,24 @@
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { env } from './env.js';
 
 let memoryServer = null;
 
 const connectWithUri = async (uri) => {
   const conn = await mongoose.connect(uri, {
-    serverSelectionTimeoutMS: 4000,
+    serverSelectionTimeoutMS: env.isDev ? 4000 : 10000,
   });
   return conn;
 };
 
+const startMemoryServer = async () => {
+  const { MongoMemoryServer } = await import('mongodb-memory-server');
+  memoryServer = await MongoMemoryServer.create();
+  return memoryServer.getUri('minicrm');
+};
+
 export const connectDB = async () => {
   if (env.useMemoryDb) {
-    memoryServer = await MongoMemoryServer.create();
-    const uri = memoryServer.getUri('minicrm');
+    const uri = await startMemoryServer();
     const conn = await connectWithUri(uri);
     console.log('Using in-memory MongoDB (USE_MEMORY_DB=true)');
     console.log(`MongoDB connected: ${conn.connection.host}`);
@@ -33,8 +37,7 @@ export const connectDB = async () => {
     console.warn(`Local MongoDB unavailable (${error.message})`);
     console.warn('Starting in-memory MongoDB for development...');
 
-    memoryServer = await MongoMemoryServer.create();
-    const uri = memoryServer.getUri('minicrm');
+    const uri = await startMemoryServer();
     const conn = await connectWithUri(uri);
     console.log(`In-memory MongoDB ready: ${conn.connection.host}`);
   }

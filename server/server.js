@@ -1,12 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './config/db.js';
-import { env, corsOrigins } from './config/env.js';
+import { env, corsOrigins, validateProductionEnv } from './config/env.js';
 import authRouter from './routers/authRouter.js';
 import leadRouter from './routers/leadRouter.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { seedIfEmpty } from './seed/seedIfEmpty.js';
 
+const PORT = Number(process.env.PORT) || 5001;
 const app = express();
 
 app.use(
@@ -45,11 +46,15 @@ app.use(notFound);
 app.use(errorHandler);
 
 const start = async () => {
+  validateProductionEnv();
   await connectDB();
   await seedIfEmpty();
-  app.listen(env.port, () => {
-    console.log(`Server running on http://localhost:${env.port}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
   });
 };
 
-start();
+start().catch((error) => {
+  console.error('Failed to start server:', error.message);
+  process.exit(1);
+});
